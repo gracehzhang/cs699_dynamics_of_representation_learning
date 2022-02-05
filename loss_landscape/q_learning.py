@@ -7,7 +7,7 @@ class Q_Learning(nn.Module):
 	def __init__(self, env, gamma=0.99):
 		super(Q_Learning, self).__init__()
 		# check if observation space is image or vector
-		if len(env.observation_space.shape) == 3:
+		if len(env.observation_space.shape) == None:
 			state_dim = np.prod(env.observation_space.shape) 
 		else:
 			state_dim = env.observation_space.shape[0]
