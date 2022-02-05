@@ -28,6 +28,12 @@ from utils.nn_manipulation import count_params, flatten_grads
 from utils.reproducibility import set_seed
 from utils.resnet import get_resnet
 
+### RL Stuff
+import gym
+import d4rl
+from utils.BCModel import MLP
+from q_learning import Q_Learning
+
 # "Fixed" hyperparameters
 NUM_EPOCHS = 200
 # In the resnet paper they train for ~90 epoch before reducing LR, then 45 and 45 epochs.
@@ -35,8 +41,32 @@ NUM_EPOCHS = 200
 LR = 0.1
 DATA_FOLDER = "../data/"
 
+class RLDataset(torch.utils.data.Dataset):
+  'Characterizes a dataset for PyTorch'
+  def __init__(self, obs, acs, next_obs, rews, dones):
+        'Initialization'
+        self.obs= obs
+        self.acs = acs
+        self.next_obs = next_obs
+        self.rews = rews
+        self.dones = dones
 
-def get_dataloader(batch_size, train_size=None, test_size=None, transform_train_data=True):
+  def __len__(self):
+        'Denotes the total number of samples'
+        return len(self.obs)
+
+  def __getitem__(self, index):
+        'Generates one sample of data'
+        # Select sample
+        ob = self.obs[index]
+        ac = self.acs[index]
+        next_ob = self.next_obs[index]
+        rew = self.rews[index]
+        done = self.dones[index]
+
+        return ob,ac,next_ob,rew,done
+
+def get_dataloader(batch_size, env, train_size=None, test_size=None, transform_train_data=True):
     """
         returns: cifar dataloader
 
@@ -47,33 +77,10 @@ def get_dataloader(batch_size, train_size=None, test_size=None, transform_train_
         transform_train_data: If we should transform (random crop/flip etc) or not
     """
 
-    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-
-    transform = transforms.Compose(
-        [
-            transforms.RandomHorizontalFlip(), transforms.RandomCrop(32, 4),
-            transforms.ToTensor(), normalize
-        ]
-    ) if transform_train_data else transforms.Compose([transforms.ToTensor(), normalize])
-
-    test_transform = transforms.Compose([transforms.ToTensor(), normalize])
-
-    # CIFAR-10 dataset
-    train_dataset = torchvision.datasets.CIFAR10(
-        root=DATA_FOLDER, train=True, transform=transform, download=True
-    )
-
-    test_dataset = torchvision.datasets.CIFAR10(
-        root=DATA_FOLDER, train=False, transform=test_transform, download=True
-    )
-
-    if train_size:
-        indices = numpy.random.permutation(numpy.arange(len(train_dataset)))
-        train_dataset = Subset(train_dataset, indices[:train_size])
-
-    if test_size:
-        indices = numpy.random.permutation(numpy.arange(len(test_dataset)))
-        test_dataset = Subset(train_dataset, indices[:test_size])
+    dataset = d4rl.qlearning_dataset(env)
+    split = int(len(dataset["observations"]) * 0.9)
+    train_dataset = RLDataset(dataset["observations"][:split], dataset["actions"][:split], dataset["next_observations"][:split], dataset["rewards"][:split], dataset["terminals"][:split])
+    test_dataset = RLDataset(dataset["observations"][split:], dataset["actions"][split:], dataset["next_observations"][split:], dataset["rewards"][split:], dataset["terminals"][split:])
 
     # Data loader
     train_loader = torch.utils.data.DataLoader(
@@ -90,6 +97,7 @@ def get_dataloader(batch_size, train_size=None, test_size=None, transform_train_
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-D", "--debug", action='store_true')
+    parser.add_argument("--env", type=str, default="minigrid-fourrooms-v0")
     parser.add_argument("--seed", required=False, type=int, default=0)
     parser.add_argument(
         "--device", required=False, default="cuda" if torch.cuda.is_available() else "cpu"
@@ -102,7 +110,7 @@ if __name__ == "__main__":
     # model related arguments
     parser.add_argument("--statefile", "-s", required=False, default=None)
     parser.add_argument(
-        "--model", required=True, choices=["resnet20", "resnet32", "resnet44", "resnet56"]
+        "--model", required=True, choices=["BC", "Q"]
     )
     parser.add_argument("--remove_skip_connections", action="store_true", default=False)
     parser.add_argument(
@@ -130,13 +138,18 @@ if __name__ == "__main__":
 
     set_seed(args.seed)
 
+    env = gym.make(args.env)
+    env.seed(args.seed)
+
     # get dataset
-    train_loader, test_loader = get_dataloader(args.batch_size)
+    train_loader, test_loader = get_dataloader(args.batch_size, env)
 
     # get model
-    model = get_resnet(args.model)(
-        num_classes=10, remove_skip_connections=args.remove_skip_connections
-    )
+    if args.model == "BC":
+        model = MLP(env)
+    elif args.model == "Q":
+        model = Q_Learning(env)
+
     model.to(args.device)
     logger.info(f"using {args.model} with {count_params(model)} parameters")
 
@@ -151,7 +164,7 @@ if __name__ == "__main__":
     fd_last_1 = FrequentDirectionAccountant(k=2, l=10, n=total_params, device=args.device)
 
     # use the same setup as He et al., 2015 (resnet)
-    optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=0.9, weight_decay=1e-4)
+    optimizer = torch.optim.Adam(model.parameters(), lr=LR)
     scheduler = torch.optim.lr_scheduler.LambdaLR(
         optimizer=optimizer, lr_lambda=lambda x: 1 if x < 100 else (0.1 if x < 150 else 0.01)
     )
@@ -168,13 +181,16 @@ if __name__ == "__main__":
     direction_time = 0
     for epoch in range(NUM_EPOCHS):
         model.train()
-        for i, (images, labels) in enumerate(train_loader):
-            images = images.to(args.device)
-            labels = labels.to(args.device)
+        for i, (obs,acs,next_obs,rews,dones) in enumerate(train_loader):
+            obs = obs.to(args.device)
+            acs = acs.to(args.device)
+            next_obs = next_obs.to(args.device)
+            rews = rews.to(args.device)
+            dones = dones.to(args.device)
 
+            batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
             # Forward pass
-            outputs = model(images)
-            loss = torch.nn.functional.cross_entropy(outputs, labels)
+            loss = model.compute_loss(batch)
 
             # Backward and optimize
             optimizer.zero_grad()
