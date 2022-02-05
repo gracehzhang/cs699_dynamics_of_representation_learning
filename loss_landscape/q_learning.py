@@ -48,11 +48,11 @@ class Q_Learning(nn.Module):
 		return action
 
 	def compute_loss(self, input_batch: dict):
-		obs = input_batch['obs']
-		action = input_batch['action']
-		reward = input_batch['reward']
-		next_obs = input_batch['next_obs']
-		done = input_batch['done']
+		obs = input_batch['observations']
+		action = input_batch['actions']
+		reward = input_batch['rewards']
+		next_obs = input_batch['next_observations']
+		done = input_batch['terminals']
 
 		# compute Q(s,a)
 		s_a = torch.cat((obs, action), dim=1)
