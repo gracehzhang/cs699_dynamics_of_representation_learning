@@ -62,4 +62,4 @@ class Q_Learning(nn.Module):
 		else:
 			q_sa_target = reward + self.gamma * torch.max(self.sample_continuous_actions(next_obs), dim=1)[0] * (1-done)
 
-		return self.loss_fn(q_sa, q_sa_target)	
+		return self.loss_fn(q_sa, q_sa_target), None
