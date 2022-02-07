@@ -16,6 +16,7 @@ import time
 
 import dill
 import numpy.random
+import numpy as np
 import torch
 import torchvision
 import torchvision.transforms as transforms
@@ -228,9 +229,17 @@ if __name__ == "__main__":
                 pickle_module=dill
             )
 
-        loss, acc = get_loss_value(model, test_loader, device=args.device)
-        logger.info(f'Accuracy of the model on the test images: {100 * acc}%')
-        summary_writer.add_scalar("test/acc", acc, step)
+        loss = []
+        for i, (obs,acs,next_obs,rews,dones) in enumerate(test_loader):
+            obs = obs.to(args.device)
+            acs = acs.to(args.device)
+            next_obs = next_obs.to(args.device)
+            rews = rews.to(args.device)
+            dones = dones.to(args.device)
+            batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
+            loss.append(model.compute_loss(batch).item())
+        loss = np.mean(loss)
+        logger.info(f'Loss of the model on the test data: {loss}')
         summary_writer.add_scalar("test/loss", loss, step)
 
     logger.info(f"Time to computer frequent directions {direction_time} s")
