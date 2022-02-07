@@ -57,7 +57,7 @@ class Q_Learning(nn.Module):
 
 		# compute Q(s,a)
 		if len(obs.shape) > 2:
-			obs = obs.reshape(-1, -1, self.state_dim)
+			obs = obs.reshape(-1, self.state_dim)
 		s_a = torch.cat((obs, action), dim=1)
 		q_sa = self.forward(s_a)
 		if self.action_type == "discrete":
