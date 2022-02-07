@@ -18,9 +18,16 @@ from utils.nn_manipulation import count_params, flatten_params, set_weights_by_d
 from utils.reproducibility import set_seed
 from utils.resnet import get_resnet
 
+### RL Stuff
+import gym
+import d4rl
+from utils.BCModel import MLP
+from q_learning import Q_Learning
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-D", "--debug", action='store_true')
+    parser.add_argument("--env", type=str, default="minigrid-fourrooms-v0")
     parser.add_argument("--seed", required=False, type=int, default=0)
     parser.add_argument(
         "--device", required=False, default="cuda" if torch.cuda.is_available() else "cpu"
@@ -28,7 +35,7 @@ if __name__ == '__main__':
     parser.add_argument("--result_folder", "-r", required=True)
     parser.add_argument("--statefile", "-s", required=False, default=None)
     parser.add_argument(
-        "--model", required=True, choices=["resnet20", "resnet32", "resnet44", "resnet56"]
+        "--model", required=True, choices=["BC", "Q"]
     )
     parser.add_argument("--remove_skip_connections", action="store_true", default=False)
     parser.add_argument("--skip_bn_bias", action="store_true")
@@ -56,6 +63,8 @@ if __name__ == '__main__':
     if args.debug:
         logger.setLevel(logging.DEBUG)
     set_seed(args.seed)
+    env = gym.make(args.env)
+    env.seed(args.seed)
 
     if os.path.exists(f"{args.result_folder}/{args.surface_file}"):
         logger.error(f"{args.surface_file} exists, so we will exit")
@@ -68,9 +77,10 @@ if __name__ == '__main__':
     )
 
     # get model
-    model = get_resnet(args.model)(
-        num_classes=10, remove_skip_connections=args.remove_skip_connections
-    )
+    if args.model == "BC":
+        model = MLP(env)
+    elif args.model == "Q":
+        model = Q_Learning(env)
     model.to(args.device)
     total_params = count_params(model)
     logger.info(f"using {args.model} with {total_params} parameters")

@@ -15,16 +15,23 @@ from utils.nn_manipulation import count_params, flatten_params
 from utils.reproducibility import set_seed
 from utils.resnet import get_resnet
 
+### RL Stuff
+import gym
+import d4rl
+from utils.BCModel import MLP
+from q_learning import Q_Learning
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-D", "--debug", action='store_true')
+    parser.add_argument("--env", type=str, default="minigrid-fourrooms-v0")
     parser.add_argument("--seed", required=False, type=int, default=0)
     parser.add_argument("--result_folder", "-r", required=True)
 
     # model related arguments
     parser.add_argument("--statefile_folder", "-s", required=True)
     parser.add_argument(
-        "--model", required=True, choices=["resnet20", "resnet32", "resnet44", "resnet56"]
+        "--model", required=True, choices=["BC", "Q"]
     )
     parser.add_argument("--remove_skip_connections", action="store_true", default=False)
     parser.add_argument("--skip_bn_bias", action="store_true")
@@ -46,11 +53,15 @@ if __name__ == '__main__':
         sys.exit()
 
     set_seed(args.seed)
+    env = gym.make(args.env)
+    env.seed(args.seed)
 
     # get model
-    model = get_resnet(args.model)(
-        num_classes=10, remove_skip_connections=args.remove_skip_connections
-    )
+    if args.model == "BC":
+        model = MLP(env)
+    elif args.model == "Q":
+        model = Q_Learning(env)
+
     model.to("cpu")
     # since we will be mainly moving data so using cpu should be a better idea
     logger.info(f"using {args.model} with {count_params(model)} parameters")
