@@ -17,6 +17,7 @@ class Q_Learning(nn.Module):
 		else:
 			action_dim = env.action_space.shape[0]
 			self.action_type = "continuous"
+		self.state_dim = state_dim
 		self.action_space = env.action_space
 		self.action_dim = action_dim
 		self.gamma = gamma
@@ -55,6 +56,8 @@ class Q_Learning(nn.Module):
 		done = input_batch['terminals']
 
 		# compute Q(s,a)
+		if len(obs.shape) > 2:
+			obs = obs.reshape(-1, -1, self.state_dim)
 		s_a = torch.cat((obs, action), dim=1)
 		q_sa = self.forward(s_a)
 		if self.action_type == "discrete":
