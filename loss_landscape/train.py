@@ -238,8 +238,8 @@ if __name__ == "__main__":
             rews = rews.to(args.device)
             dones = dones.to(args.device)
             batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
-            loss, acc = model.compute_loss(batch).detach().cpu()
-            losses.append(loss)
+            loss, acc = model.compute_loss(batch)
+            losses.append(loss.item())
             if acc is not None:
                 accs.append(acc)
 
