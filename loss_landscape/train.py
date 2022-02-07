@@ -23,11 +23,11 @@ import torchvision.transforms as transforms
 from torch.utils.data import Subset
 from torch.utils.tensorboard import SummaryWriter
 
-from utils.evaluations import get_loss_value
+# from utils.evaluations import get_loss_value
 from utils.linear_algebra import FrequentDirectionAccountant
 from utils.nn_manipulation import count_params, flatten_grads
 from utils.reproducibility import set_seed
-from utils.resnet import get_resnet
+# from utils.resnet import get_resnet
 
 ### RL Stuff
 import gym
@@ -191,7 +191,7 @@ if __name__ == "__main__":
 
             batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
             # Forward pass
-            loss = model.compute_loss(batch)
+            loss, _ = model.compute_loss(batch)
 
             # Backward and optimize
             optimizer.zero_grad()
@@ -229,7 +229,8 @@ if __name__ == "__main__":
                 pickle_module=dill
             )
 
-        loss = []
+        losses = []
+        accs = []
         for i, (obs,acs,next_obs,rews,dones) in enumerate(test_loader):
             obs = obs.to(args.device)
             acs = acs.to(args.device)
@@ -237,10 +238,19 @@ if __name__ == "__main__":
             rews = rews.to(args.device)
             dones = dones.to(args.device)
             batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
-            loss.append(model.compute_loss(batch).item())
-        loss = np.mean(loss)
+            loss, acc = model.compute_loss(batch).detach().cpu()
+            losses.append(loss)
+            if acc is not None:
+                accs.append(acc)
+
+        loss = np.mean(losses)
         logger.info(f'Loss of the model on the test data: {loss}')
         summary_writer.add_scalar("test/loss", loss, step)
+
+        if len(accs) > 0:
+            acc = np.mean(accs)
+            logger.info(f'Accuracy of the model on the test data: {100 * acc}%')
+            summary_writer.add_scalar("test/acc", acc, step)
 
     logger.info(f"Time to computer frequent directions {direction_time} s")
 
