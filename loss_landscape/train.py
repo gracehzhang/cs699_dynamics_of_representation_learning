@@ -160,7 +160,10 @@ if __name__ == "__main__":
     logger = logging.getLogger()
     if args.debug:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
     summary_writer = SummaryWriter(log_dir=args.result_folder)
+
     logger.info("Config:")
     logger.info(pprint.pformat(vars(args), indent=4))
 
