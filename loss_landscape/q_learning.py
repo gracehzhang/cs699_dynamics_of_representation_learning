@@ -64,6 +64,7 @@ class Q_Learning(nn.Module):
 		import pdb; pdb.set_trace()
 		if len(obs.shape) > 2: 
 			obs = obs.reshape(obs.shape[0], self.state_dim)
+			next_obs = next_obs.reshape(next_obs.shape[0], self.state_dim)
 		if self.action_type == "discrete":
 			#if len(action.shape) == 1:
 			#	action = action.unsqueeze(-1)
