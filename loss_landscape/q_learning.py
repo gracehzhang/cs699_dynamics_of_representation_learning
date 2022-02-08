@@ -44,9 +44,10 @@ class Q_Learning(nn.Module):
 		repeat_factor = 100
 		batch_size = next_obs.shape[0]
 		for _ in range(repeat_factor):
-			a_samples.append(np.repeat(np.expand_dims(self.action_space.sample(), 0), (batch_size, 1)))
-		a_samples = torch.tensor(a_samples).float().unsqueeze(0).to(next_obs.device).unsqueeze(0)
-		next_obs_repeated = next_obs.repeat_interleave(repeat_factor, 1)
+			a_samples.append(np.tile(np.expand_dims(np.expand_dims(self.action_space.sample(), 0), 0), (batch_size, 1, 1)))
+		a_samples = np.concatenate(a_samples, axis=1)
+		a_samples = torch.tensor(a_samples).float().to(next_obs.device)
+		next_obs_repeated = next_obs.repeat(repeat_factor, 1)
 		a_samples = a_samples.reshape(repeat_factor * batch_size, -1)
 		q_sa_samples = self.forward(torch.cat((next_obs_repeated, a_samples), dim=1))
 		q_sa_samples = q_sa_samples.reshape(batch_size, repeat_factor)
