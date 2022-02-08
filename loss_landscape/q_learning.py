@@ -44,8 +44,8 @@ class Q_Learning(nn.Module):
 		repeat_factor = 100
 		batch_size = next_obs.shape[0]
 		for _ in range(repeat_factor):
-			a_samples.append(self.action_space.sample())
-		a_samples = torch.tensor(a_samples).float().unsqueeze(0).repeat(batch_size, 1, 1).to(next_obs.device).unsqueeze(0)
+			a_samples.append(np.repeat(np.expand_dims(self.action_space.sample(), 0), (batch_size, 1)))
+		a_samples = torch.tensor(a_samples).float().unsqueeze(0).to(next_obs.device).unsqueeze(0)
 		next_obs_repeated = next_obs.repeat_interleave(repeat_factor, 1)
 		a_samples = a_samples.reshape(repeat_factor * batch_size, -1)
 		q_sa_samples = self.forward(torch.cat((next_obs_repeated, a_samples), dim=1))
@@ -56,7 +56,7 @@ class Q_Learning(nn.Module):
 		if self.action_type == "discrete":
 			action = self.forward(obs).argmax(dim=1)
 		else:
-			action = self.forward(obs).max(dim=1)[1]
+			action = torch.max(self.sample_continuous_actions(obs), dim=1)[0]
 		return action
 
 	def compute_loss(self, input_batch: dict):
