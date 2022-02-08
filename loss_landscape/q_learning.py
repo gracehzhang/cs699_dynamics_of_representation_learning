@@ -58,7 +58,7 @@ class Q_Learning(nn.Module):
 		action = input_batch['actions']
 		reward = input_batch['rewards']
 		next_obs = input_batch['next_observations']
-		done = input_batch['terminals']
+		done = input_batch['terminals'].float()
 
 		# compute Q(s,a)
 		import pdb; pdb.set_trace()
