@@ -1,3 +1,4 @@
+from timeit import repeat
 import torch
 import torch.nn as nn
 import gym
@@ -40,10 +41,15 @@ class Q_Learning(nn.Module):
 
 	def sample_continuous_actions(self, next_obs):
 		a_samples = []
-		for i in range(100):
+		repeat_factor = 100
+		batch_size = next_obs.shape[0]
+		for _ in range(repeat_factor):
 			a_samples.append(self.action_space.sample())
-		a_samples = torch.tensor(a_samples).float().to(next_obs.device)
-		q_sa_samples = self.forward(torch.cat((next_obs, a_samples), dim=1))
+		a_samples = torch.tensor(a_samples).float().unsqueeze(0).repeat(batch_size, 1, 1).to(next_obs.device).unsqueeze(0)
+		next_obs_repeated = next_obs.repeat(repeat_factor, 1)
+		a_samples = a_samples.reshape(repeat_factor * batch_size, -1)
+		q_sa_samples = self.forward(torch.cat((next_obs_repeated, a_samples), dim=1))
+		q_sa_samples = q_sa_samples.reshape(batch_size, repeat_factor)
 		return q_sa_samples
 
 	def compute_action(self, obs):
