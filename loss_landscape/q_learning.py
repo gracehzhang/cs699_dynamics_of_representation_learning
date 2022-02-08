@@ -42,7 +42,7 @@ class Q_Learning(nn.Module):
 		a_samples = []
 		for i in range(100):
 			a_samples.append(self.action_space.sample())
-		a_samples = torch.tensor(a_samples).float().to(self.next_obs.device)
+		a_samples = torch.tensor(a_samples).float().to(next_obs.device)
 		q_sa_samples = self.forward(torch.cat((next_obs, a_samples), dim=1))
 		return q_sa_samples
 
