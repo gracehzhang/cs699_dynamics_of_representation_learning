@@ -63,7 +63,7 @@ class Q_Learning(nn.Module):
 		# compute Q(s,a)
 		import pdb; pdb.set_trace()
 		if len(obs.shape) > 2: 
-			obs = obs.reshape(-1, self.state_dim)
+			obs = obs.reshape(obs.shape[1], self.state_dim)
 		if self.action_type == "discrete":
 			#if len(action.shape) == 1:
 			#	action = action.unsqueeze(-1)
