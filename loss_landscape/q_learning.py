@@ -61,7 +61,6 @@ class Q_Learning(nn.Module):
 		done = input_batch['terminals'].float()
 
 		# compute Q(s,a)
-		import pdb; pdb.set_trace()
 		if len(obs.shape) > 2: 
 			obs = obs.reshape(obs.shape[0], self.state_dim)
 			next_obs = next_obs.reshape(next_obs.shape[0], self.state_dim)
