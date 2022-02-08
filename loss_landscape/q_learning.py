@@ -54,6 +54,9 @@ class Q_Learning(nn.Module):
 		return q_sa_samples
 
 	def compute_action(self, obs):
+		if len(obs.shape) > 2:
+			obs = obs.reshape(obs.shape[0], self.state_dim)
+
 		if self.action_type == "discrete":
 			action = self.forward(obs).argmax(dim=1)
 		else:

@@ -13,6 +13,8 @@ import logging
 import os
 import pprint
 import time
+from tqdm import tqdm
+
 
 import dill
 import numpy.random
@@ -94,6 +96,30 @@ def get_dataloader(batch_size, env, train_size=None, test_size=None, transform_t
 
     return train_loader, test_loader
 
+def evaluate_policy(model, env, num_episodes):
+    rews = []
+
+    pbar = tqdm(range(num_episodes))
+    for _ in pbar:
+        pbar.set_description("Evaluating ...")
+        ob = env.reset()
+
+        while True:
+            ### ASDF make sure this works for BC
+            if isinstance(ob, dict):
+                ob = ob["image"]
+            ob = torch.Tensor(np.expand_dims(ob, axis=0)).to(args.device)
+            ac = model.compute_action(ob)[0].cpu().detach().numpy()
+            ob, rew, done, _ = env.step(ac)
+            rews.append(rew)
+
+            if done:
+                break
+
+    return np.sum(rews) / num_episodes
+
+
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -120,6 +146,7 @@ if __name__ == "__main__":
     )
 
     parser.add_argument("--batch_size", required=False, type=int, default=128)
+    parser.add_argument("--num_eval_episodes", required=False, type=int, default=10)
     parser.add_argument(
         "--save_strategy", required=False, nargs="+", choices=["epoch", "init"],
         default=["epoch", "init"]
@@ -251,6 +278,10 @@ if __name__ == "__main__":
             acc = np.mean(accs)
             logger.info(f'Accuracy of the model on the test data: {100 * acc}%')
             summary_writer.add_scalar("test/acc", acc, step)
+
+        eval = evaluate_policy(model, env, args.num_eval_episodes)
+        logger.info(f'Evaluating model on {args.num_eval_episodes} episodes: {eval}')
+        summary_writer.add_scalar("test/return", eval, step)
 
     logger.info(f"Time to computer frequent directions {direction_time} s")
 

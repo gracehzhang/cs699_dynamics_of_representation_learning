@@ -43,6 +43,7 @@ class MLP(torch.nn.Module):
             return torch.argmax(out, dim=1)
         else:
             out = self.forward(X)
+            return out
 
     def compute_loss(self, inputs):
         out = self.forward(inputs['observations'])
