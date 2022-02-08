@@ -21,9 +21,14 @@ class Q_Learning(nn.Module):
 		self.action_space = env.action_space
 		self.action_dim = action_dim
 		self.gamma = gamma
-		self.fc1 = nn.Linear(state_dim + action_dim, 256)
-		self.fc2 = nn.Linear(256, 256)
-		self.fc3 = nn.Linear(256, 1)	
+		if self.action_type == "discrete":
+			self.fc1 = nn.Linear(state_dim, 256)
+			self.fc2 = nn.Linear(256, 256)
+			self.fc3 = nn.Linear(256, action_dim)	
+		else:
+			self.fc1 = nn.Linear(state_dim + action_dim, 256)
+			self.fc2 = nn.Linear(256, 256)
+			self.fc3 = nn.Linear(256, 1)	
 		self.relu = nn.ReLU()
 		self.loss_fn = nn.MSELoss()
 
@@ -37,7 +42,7 @@ class Q_Learning(nn.Module):
 		a_samples = []
 		for i in range(100):
 			a_samples.append(self.action_space.sample())
-		a_samples = torch.tensor(a_samples).float()
+		a_samples = torch.tensor(a_samples).float().to(self.next_obs.device)
 		q_sa_samples = self.forward(torch.cat((next_obs, a_samples), dim=1))
 		return q_sa_samples
 
@@ -58,13 +63,16 @@ class Q_Learning(nn.Module):
 		# compute Q(s,a)
 		if len(obs.shape) > 2: 
 			obs = obs.reshape(-1, self.state_dim)
-		if len(action.shape) == 1:
-			action = action.unsqueeze(-1)
-		s_a = torch.cat((obs, action), dim=1)
-		q_sa = self.forward(s_a)
 		if self.action_type == "discrete":
-			q_sa_target = reward + self.gamma * torch.max(self.forward(next_obs), dim=1)[0] * (1-done)
+			#if len(action.shape) == 1:
+			#	action = action.unsqueeze(-1)
+			q_sa = self.forward(obs)
+			q_sa_target = reward + self.gamma * torch.max(self.forward(next_obs).gather(1, action), dim=1)[0] * (1-done)
 		else:
+			if len(action.shape) == 1:
+				action = action.unsqueeze(-1)
+			s_a = torch.cat((obs, action), dim=1)
+			q_sa = self.forward(s_a)
 			q_sa_target = reward + self.gamma * torch.max(self.sample_continuous_actions(next_obs), dim=1)[0] * (1-done)
 
 		return self.loss_fn(q_sa, q_sa_target), None
