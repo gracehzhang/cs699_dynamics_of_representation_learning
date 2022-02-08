@@ -65,14 +65,12 @@ class Q_Learning(nn.Module):
 		if len(obs.shape) > 2: 
 			obs = obs.reshape(obs.shape[0], self.state_dim)
 			next_obs = next_obs.reshape(next_obs.shape[0], self.state_dim)
+		if len(action.shape) == 1:
+			action = action.unsqueeze(-1)
 		if self.action_type == "discrete":
-			#if len(action.shape) == 1:
-			#	action = action.unsqueeze(-1)
-			q_sa = self.forward(obs)
-			q_sa_target = reward + self.gamma * torch.max(self.forward(next_obs).gather(1, action), dim=1)[0] * (1-done)
+			q_sa = self.forward(obs).gather(1, action.long())
+			q_sa_target = reward + self.gamma * torch.max(self.forward(next_obs), dim=1)[0] * (1-done)
 		else:
-			if len(action.shape) == 1:
-				action = action.unsqueeze(-1)
 			s_a = torch.cat((obs, action), dim=1)
 			q_sa = self.forward(s_a)
 			q_sa_target = reward + self.gamma * torch.max(self.sample_continuous_actions(next_obs), dim=1)[0] * (1-done)
