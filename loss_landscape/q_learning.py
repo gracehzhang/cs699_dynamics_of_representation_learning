@@ -61,6 +61,7 @@ class Q_Learning(nn.Module):
 		done = input_batch['terminals']
 
 		# compute Q(s,a)
+		import pdb; pdb.set_trace()
 		if len(obs.shape) > 2: 
 			obs = obs.reshape(-1, self.state_dim)
 		if self.action_type == "discrete":
