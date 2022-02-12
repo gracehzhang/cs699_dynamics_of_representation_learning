@@ -4,7 +4,7 @@ import argparse
 import logging
 import os
 
-import numpy
+import numpy as np
 from matplotlib import pyplot
 
 if __name__ == '__main__':
@@ -26,17 +26,17 @@ if __name__ == '__main__':
 
     if args.surface_file:
         # create a contour plot
-        data = numpy.load(f"{args.surface_file}")
+        data = np.load(f"{args.surface_file}")
 
         xcoords = data["xcoordinates"]
         ycoords = data["ycoordinates"]
         losses = data["losses"]
         acc = data["accuracies"]
 
-        X, Y = numpy.meshgrid(xcoords, ycoords, indexing="ij")
+        X, Y = np.meshgrid(xcoords, ycoords, indexing="ij")
         Z = losses
         fig = pyplot.figure()
-        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=numpy.arange(0.1, 10, 0.5))
+        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=np.linspace(np.min(Z), np.max(Z), 10))
         pyplot.clabel(CS, inline=1, fontsize=8)
         fig.savefig(
             f"{args.result_folder}/{args.plot_prefix}_surface_2d_contour", dpi=300,
@@ -46,14 +46,14 @@ if __name__ == '__main__':
 
     if args.trajectory_file:
         # create a 2D plot of trajectory
-        data = numpy.load(f"{args.trajectory_file}")
+        data = np.load(f"{args.trajectory_file}")
 
         xcoords = data["xcoordinates"]
         ycoords = data["ycoordinates"]
 
         fig = pyplot.figure()
         pyplot.plot(xcoords, ycoords, linewidth=0.5, alpha=0.3)
-        pyplot.scatter(xcoords, ycoords, marker='.', c=numpy.arange(len(xcoords)))
+        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)))
         pyplot.colorbar()
         pyplot.tick_params('y', labelsize='x-large')
         pyplot.tick_params('x', labelsize='x-large')
@@ -66,26 +66,26 @@ if __name__ == '__main__':
 
     if args.surface_file and args.trajectory_file:
         # create a contour plot
-        data = numpy.load(f"{args.surface_file}")
+        data = np.load(f"{args.surface_file}")
 
         xcoords = data["xcoordinates"]
         ycoords = data["ycoordinates"]
         losses = data["losses"]
         acc = data["accuracies"]
 
-        X, Y = numpy.meshgrid(xcoords, ycoords, indexing="ij")
+        X, Y = np.meshgrid(xcoords, ycoords, indexing="ij")
         Z = losses
         fig = pyplot.figure()
-        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=numpy.arange(0.1, 10, 0.5))
+        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=np.linspace(np.min(Z), np.max(Z), 10))
         pyplot.clabel(CS, inline=1, fontsize=8)
 
-        data = numpy.load(f"{args.trajectory_file}")
+        data = np.load(f"{args.trajectory_file}")
 
         xcoords = data["xcoordinates"]
         ycoords = data["ycoordinates"]
         pyplot.plot(xcoords, ycoords, linewidth=0.5, alpha=0.3)
         pyplot.colorbar()
-        pyplot.scatter(xcoords, ycoords, marker='.', c=numpy.arange(len(xcoords)))
+        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)))
         pyplot.tick_params('y', labelsize='x-large')
         pyplot.tick_params('x', labelsize='x-large')
 

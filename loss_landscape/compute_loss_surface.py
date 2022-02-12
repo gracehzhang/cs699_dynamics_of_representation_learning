@@ -121,7 +121,7 @@ if __name__ == '__main__':
                     model, x, y, direction1, direction2, pretrained_weights,
                     skip_bn_bias=args.skip_bn_bias
                 )
-                rewards[idx_x, idx_y] = evaluate_policy(model, env, 10, f"idx_x-{idx_x}_idx_y-{idx_y}", "idx_x-idx_y-videos")
+                rewards[idx_x, idx_y] = evaluate_policy(model, env, 10, f"idx_x-{idx_x}_idx_y-{idx_y}", "idx_x-idx_y-videos", args.device)
                 losses[idx_x, idx_y], accuracies[idx_x, idx_y] = get_model_loss(model, train_loader, args.device)
                 pbar.set_description(f"x:{x: .4f}, y:{y: .4f}, loss:{losses[idx_x, idx_y]:.4f}")
                 pbar.update(1)
