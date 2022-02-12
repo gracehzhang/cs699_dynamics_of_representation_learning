@@ -11,7 +11,7 @@ from matplotlib import pyplot
 import seaborn as sns
 
 # Apply the default theme
-sns.set_theme()
+sns.set_theme("white")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -42,7 +42,7 @@ if __name__ == '__main__':
         X, Y = np.meshgrid(xcoords, ycoords, indexing="ij")
         Z = losses
         fig = pyplot.figure()
-        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=np.linspace(np.min(Z), np.max(Z), 10))
+        CS = pyplot.contour(X, Y, Z, cmap=sns.color_pallete("viridis", as_cmap=True), levels=np.linspace(np.min(Z), np.max(Z), 10))
         pyplot.clabel(CS, inline=1, fontsize=8)
         fig.savefig(
             f"{args.result_folder}/{args.plot_prefix}_surface_2d_contour", dpi=300,
@@ -82,7 +82,7 @@ if __name__ == '__main__':
         X, Y = np.meshgrid(xcoords, ycoords, indexing="ij")
         Z = losses
         fig = pyplot.figure()
-        CS = pyplot.contour(X, Y, Z, cmap='summer', levels=np.linspace(np.min(Z), np.max(Z), 10))
+        CS = pyplot.contour(X, Y, Z, cmap=sns.color_pallete("viridis", as_cmap=True), levels=np.linspace(np.min(Z), np.max(Z), 10))
         pyplot.clabel(CS, inline=1, fontsize=8)
 
         data = np.load(f"{args.trajectory_file}")
