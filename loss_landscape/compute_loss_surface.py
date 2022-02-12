@@ -12,7 +12,7 @@ import numpy
 import torch
 from tqdm import tqdm
 
-from train import get_dataloader, get_model_loss
+from train import get_dataloader, get_model_loss, evaluate_policy
 from utils.evaluations import get_loss_value
 from utils.nn_manipulation import count_params, flatten_params, set_weights_by_direction
 from utils.reproducibility import set_seed
@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     losses = numpy.zeros((x_num, y_num))
     accuracies = numpy.zeros((x_num, y_num))
-
+    rewards = numpy.zeros((x_num, y_num))
     with tqdm(total=x_num * y_num) as pbar:
         for idx_x, x in enumerate(xcoordinates):
             for idx_y, y in enumerate(ycoordinates):
@@ -121,7 +121,7 @@ if __name__ == '__main__':
                     model, x, y, direction1, direction2, pretrained_weights,
                     skip_bn_bias=args.skip_bn_bias
                 )
-
+                rewards[idx_x, idx_y] = evaluate_policy(model, env, 10)
                 losses[idx_x, idx_y], accuracies[idx_x, idx_y] = get_model_loss(model, train_loader, args.device)
                 pbar.set_description(f"x:{x: .4f}, y:{y: .4f}, loss:{losses[idx_x, idx_y]:.4f}")
                 pbar.update(1)
@@ -132,3 +132,9 @@ if __name__ == '__main__':
         f"{args.result_folder}/{args.surface_file}", losses=losses, accuracies=accuracies,
         xcoordinates=xcoordinates, ycoordinates=ycoordinates
     )
+
+    numpy.savez(
+        f"{args.result_folder}/{args.surface_file}_rewards", losses=rewards, accuracies=accuracies,
+        xcoordinates=xcoordinates, ycoordinates=ycoordinates
+    )
+
