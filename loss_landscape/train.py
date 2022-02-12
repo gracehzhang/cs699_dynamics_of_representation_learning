@@ -97,7 +97,7 @@ def get_dataloader(batch_size, env, split=0.9):
 
     return train_loader, test_loader
 
-def evaluate_policy(model, env, num_episodes, epoch):
+def evaluate_policy(model, env, num_episodes, epoch, save_dir):
     rews = []
 
     pbar = tqdm(range(num_episodes))
@@ -106,7 +106,7 @@ def evaluate_policy(model, env, num_episodes, epoch):
         if i == num_episodes - 1:
             eval_env = gym.wrappers.record_video.RecordVideo(
                 env,
-                video_folder=f"{args.result_folder}/videos/",
+                video_folder=f"{save_dir}/videos/",
                 name_prefix=f"epoch_{epoch}",
             )
         else:
@@ -117,7 +117,7 @@ def evaluate_policy(model, env, num_episodes, epoch):
             ### ASDF make sure this works for BC
             if isinstance(ob, dict):
                 ob = ob["image"]
-            ob = torch.Tensor(np.expand_dims(ob, axis=0)).to(args.device)
+            ob = torch.Tensor(np.expand_dims(ob, axis=0)).to(model.device)
             ac = model.compute_action(ob)[0].cpu().detach().numpy()
             ob, rew, done, _ = eval_env.step(ac)
             rews.append(rew)
@@ -293,7 +293,7 @@ if __name__ == "__main__":
         logger.info(f'Accuracy of the model on the test data: {acc}%')
         summary_writer.add_scalar("test/acc", acc, step)
 
-        eval = evaluate_policy(model, env, args.num_eval_episodes, epoch)
+        eval = evaluate_policy(model, env, args.num_eval_episodes, epoch, args.result_folder)
         logger.info(f'Evaluating model on {args.num_eval_episodes} episodes: {eval}')
         summary_writer.add_scalar("test/return", eval, step)
 
