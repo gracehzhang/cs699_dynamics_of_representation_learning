@@ -11,7 +11,7 @@ from matplotlib import pyplot
 import seaborn as sns
 
 # Apply the default theme
-sns.set_theme("white")
+sns.set_style("white")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
