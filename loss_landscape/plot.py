@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
         fig = pyplot.figure()
         pyplot.plot(xcoords, ycoords, linewidth=0.5, alpha=0.3)
-        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)))
+        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)), cmap=sns.color_palette("mako", as_cmap=True))
         pyplot.colorbar()
         pyplot.tick_params('y', labelsize='x-large')
         pyplot.tick_params('x', labelsize='x-large')
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         ycoords = data["ycoordinates"]
         pyplot.plot(xcoords, ycoords, linewidth=0.5, alpha=0.3)
         pyplot.colorbar()
-        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)))
+        pyplot.scatter(xcoords, ycoords, marker='.', c=np.arange(len(xcoords)),cmap=sns.color_palette("rocket", as_cmap=True) )
         pyplot.tick_params('y', labelsize='x-large')
         pyplot.tick_params('x', labelsize='x-large')
 
