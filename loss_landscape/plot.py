@@ -7,6 +7,12 @@ import os
 import numpy as np
 from matplotlib import pyplot
 
+# Import seaborn
+import seaborn as sns
+
+# Apply the default theme
+sns.set_theme()
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-D", "--debug", action='store_true')
