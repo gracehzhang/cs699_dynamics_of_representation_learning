@@ -41,7 +41,7 @@ from q_learning import Q_Learning
 NUM_EPOCHS = 200
 # In the resnet paper they train for ~90 epoch before reducing LR, then 45 and 45 epochs.
 # We use 100-50-50 schedule here.
-LR = 0.1
+LR = 1e-3
 DATA_FOLDER = "../data/"
 
 class RLDataset(torch.utils.data.Dataset):
@@ -69,7 +69,7 @@ class RLDataset(torch.utils.data.Dataset):
 
         return ob,ac,next_ob,rew,done
 
-def get_dataloader(batch_size, env, train_size=None, test_size=None, transform_train_data=True):
+def get_dataloader(batch_size, env, split=0.9):
     """
         returns: cifar dataloader
 
@@ -81,7 +81,8 @@ def get_dataloader(batch_size, env, train_size=None, test_size=None, transform_t
     """
 
     dataset = d4rl.qlearning_dataset(env)
-    split = int(len(dataset["observations"]) * 0.9)
+    # bc_dataset = env.get_dataset()
+    split = int(len(dataset["observations"]) * split)
     train_dataset = RLDataset(dataset["observations"][:split], dataset["actions"][:split], dataset["next_observations"][:split], dataset["rewards"][:split], dataset["terminals"][:split])
     test_dataset = RLDataset(dataset["observations"][split:], dataset["actions"][split:], dataset["next_observations"][split:], dataset["rewards"][split:], dataset["terminals"][split:])
 
@@ -118,8 +119,26 @@ def evaluate_policy(model, env, num_episodes):
 
     return np.sum(rews) / num_episodes
 
+def get_model_loss(model, test_loader, device):
+    losses = []
+    accs = []
+    for i, (obs, acs, next_obs, rews, dones) in enumerate(test_loader):
+        obs = obs.to(device)
+        acs = acs.to(device)
+        next_obs = next_obs.to(device)
+        rews = rews.to(device)
+        dones = dones.to(device)
+        batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
+        loss, acc = model.compute_loss(batch)
+        losses.append(loss.item())
+        if acc is not None:
+            accs.append(acc)
 
-
+    if len(accs) > 0:
+        acc = np.mean(accs)
+    else:
+        acc = np.nan
+    return np.mean(losses), acc
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -259,28 +278,12 @@ if __name__ == "__main__":
                 pickle_module=dill
             )
 
-        losses = []
-        accs = []
-        for i, (obs,acs,next_obs,rews,dones) in enumerate(test_loader):
-            obs = obs.to(args.device)
-            acs = acs.to(args.device)
-            next_obs = next_obs.to(args.device)
-            rews = rews.to(args.device)
-            dones = dones.to(args.device)
-            batch = {"observations": obs, "actions": acs, "next_observations": next_obs, "rewards": rews, "terminals": dones}
-            loss, acc = model.compute_loss(batch)
-            losses.append(loss.item())
-            if acc is not None:
-                accs.append(acc)
+        loss, acc = get_model_loss(model, test_loader, args.device)
 
-        loss = np.mean(losses)
         logger.info(f'Loss of the model on the test data: {loss}')
         summary_writer.add_scalar("test/loss", loss, step)
-
-        if len(accs) > 0:
-            acc = np.mean(accs)
-            logger.info(f'Accuracy of the model on the test data: {100 * acc}%')
-            summary_writer.add_scalar("test/acc", acc, step)
+        logger.info(f'Accuracy of the model on the test data: {acc}%')
+        summary_writer.add_scalar("test/acc", acc, step)
 
         eval = evaluate_policy(model, env, args.num_eval_episodes)
         logger.info(f'Evaluating model on {args.num_eval_episodes} episodes: {eval}')

@@ -12,7 +12,7 @@ import numpy
 import torch
 from tqdm import tqdm
 
-from train import get_dataloader
+from train import get_dataloader, get_model_loss
 from utils.evaluations import get_loss_value
 from utils.nn_manipulation import count_params, flatten_params, set_weights_by_direction
 from utils.reproducibility import set_seed
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     # get dataset
     # using training dataset and only 10000 examples for faster evaluation
     train_loader, test_loader = get_dataloader(
-        args.batch_size, transform_train_data=False, train_size=10000
+        args.batch_size, env, split=0.1
     )
 
     # get model
@@ -121,9 +121,8 @@ if __name__ == '__main__':
                     model, x, y, direction1, direction2, pretrained_weights,
                     skip_bn_bias=args.skip_bn_bias
                 )
-                losses[idx_x, idx_y], accuracies[idx_x, idx_y] = get_loss_value(
-                    model, train_loader, args.device
-                )
+
+                losses[idx_x, idx_y], accuracies[idx_x, idx_y] = get_model_loss(model, train_loader, args.device)
                 pbar.set_description(f"x:{x: .4f}, y:{y: .4f}, loss:{losses[idx_x, idx_y]:.4f}")
                 pbar.update(1)
 
