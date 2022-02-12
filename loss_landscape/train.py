@@ -103,7 +103,16 @@ def evaluate_policy(model, env, num_episodes):
     pbar = tqdm(range(num_episodes))
     for _ in pbar:
         pbar.set_description("Evaluating ...")
-        ob = env.reset()
+        if i == num_episodes - 1:
+            eval_env = gym.wrappers.record_video.RecordVideo(
+                env,
+                f"{args.result_folder}/videos/epoch_{epoch}",
+                video_callable=lambda episode_id: True,
+                force=True,
+            )
+        else:
+            eval_env = env
+        ob = eval_env.reset()
 
         while True:
             ### ASDF make sure this works for BC
@@ -111,7 +120,7 @@ def evaluate_policy(model, env, num_episodes):
                 ob = ob["image"]
             ob = torch.Tensor(np.expand_dims(ob, axis=0)).to(args.device)
             ac = model.compute_action(ob)[0].cpu().detach().numpy()
-            ob, rew, done, _ = env.step(ac)
+            ob, rew, done, _ = eval_env.step(ac)
             rews.append(rew)
 
             if done:
