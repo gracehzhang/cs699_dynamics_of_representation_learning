@@ -38,7 +38,7 @@ from utils.BCModel import MLP
 from q_learning import Q_Learning
 
 # "Fixed" hyperparameters
-NUM_EPOCHS = 200
+NUM_EPOCHS = 100
 # In the resnet paper they train for ~90 epoch before reducing LR, then 45 and 45 epochs.
 # We use 100-50-50 schedule here.
 LR = 1e-3
@@ -97,18 +97,17 @@ def get_dataloader(batch_size, env, split=0.9):
 
     return train_loader, test_loader
 
-def evaluate_policy(model, env, num_episodes):
+def evaluate_policy(model, env, num_episodes, epoch):
     rews = []
 
     pbar = tqdm(range(num_episodes))
-    for _ in pbar:
+    for i in pbar:
         pbar.set_description("Evaluating ...")
         if i == num_episodes - 1:
             eval_env = gym.wrappers.record_video.RecordVideo(
                 env,
-                f"{args.result_folder}/videos/epoch_{epoch}",
-                video_callable=lambda episode_id: True,
-                force=True,
+                video_folder=f"{args.result_folder}/videos/",
+                name_prefix=f"epoch_{epoch}",
             )
         else:
             eval_env = env
@@ -125,7 +124,7 @@ def evaluate_policy(model, env, num_episodes):
 
             if done:
                 break
-
+    eval_env.close_video_recorder()
     return np.sum(rews) / num_episodes
 
 def get_model_loss(model, test_loader, device):
@@ -294,7 +293,7 @@ if __name__ == "__main__":
         logger.info(f'Accuracy of the model on the test data: {acc}%')
         summary_writer.add_scalar("test/acc", acc, step)
 
-        eval = evaluate_policy(model, env, args.num_eval_episodes)
+        eval = evaluate_policy(model, env, args.num_eval_episodes, epoch)
         logger.info(f'Evaluating model on {args.num_eval_episodes} episodes: {eval}')
         summary_writer.add_scalar("test/return", eval, step)
 
