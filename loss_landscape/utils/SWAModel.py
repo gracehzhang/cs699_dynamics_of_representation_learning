@@ -117,4 +117,5 @@ class AveragedModel(Module):
 	def compute_loss(self, x):
 		return self.module.compute_loss(x)
 
-	
+	def state_dict(self):
+		return self.module.state_dict()	
