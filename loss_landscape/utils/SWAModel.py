@@ -1,6 +1,11 @@
-import torch.nn.Module as Module
+import itertools
+import math
+from copy import deepcopy
+import warnings
+
 import torch
-import torch.nn as nn
+from torch.nn import Module
+from torch.optim.lr_scheduler import _LRScheduler
 class AveragedModel(Module):
     r"""Implements averaged model for Stochastic Weight Averaging (SWA).
     Stochastic Weight Averaging was proposed in `Averaging Weights Leads to
