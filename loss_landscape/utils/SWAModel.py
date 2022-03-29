@@ -1,3 +1,6 @@
+import torch.nn.Module as Module
+import torch
+import torch.nn as nn
 class AveragedModel(Module):
     r"""Implements averaged model for Stochastic Weight Averaging (SWA).
     Stochastic Weight Averaging was proposed in `Averaging Weights Leads to
