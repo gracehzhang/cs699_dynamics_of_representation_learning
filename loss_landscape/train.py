@@ -29,6 +29,10 @@ from torch.utils.tensorboard import SummaryWriter
 from utils.linear_algebra import FrequentDirectionAccountant
 from utils.nn_manipulation import count_params, flatten_grads
 from utils.reproducibility import set_seed
+
+from utils.SWAModel import AveragedModel
+from torch.optim.swa_utils import SWALR
+from torch.optim.lr_scheduler import CosineAnnealingLR
 # from utils.resnet import get_resnet
 
 ### RL Stuff
@@ -166,6 +170,9 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model", required=True, choices=["BC", "Q"]
     )
+    parser.add_argument(
+        "--typeBC", required=True, choices=["vanilla", "SWA"]
+    )
     parser.add_argument("--remove_skip_connections", action="store_true", default=False)
     parser.add_argument(
         "--skip_bn_bias", action="store_true",
@@ -232,6 +239,11 @@ if __name__ == "__main__":
             model.state_dict(), f"{args.result_folder}/ckpt/init_model.pt", pickle_module=dill
         )
 
+    swa_model = AveragedModel(model)
+    scheduler = CosineAnnealingLR(optimizer, T_max=100)
+    swa_start = 95
+    swa_scheduler = SWALR(optimizer, swa_lr=0.05)
+
     # training loop
     # we pass flattened gradients to the FrequentDirectionAccountant before clearing the grad buffer
     total_step = len(train_loader) * NUM_EPOCHS
@@ -277,23 +289,35 @@ if __name__ == "__main__":
                     f"Epoch [{epoch}/{NUM_EPOCHS}], Step [{step}/{total_step}] Loss: {loss.item():.4f}"
                 )
 
-        scheduler.step()
+        # scheduler.step()
+
+
+        if epoch > swa_start:
+            swa_model.update_parameters(model)
+            swa_scheduler.step()
+            evalModel = swa_model
+            tp = "swa"
+
+        else:
+            scheduler.step()
+            evalModel = model
+            tp = "van"
 
         # Save the model checkpoint
         if "epoch" in args.save_strategy:
             torch.save(
-                model.state_dict(), f'{args.result_folder}/ckpt/{epoch + 1}_model.pt',
+                evalModel.state_dict(), f'{args.result_folder}/ckpt/{epoch + 1}_model.pt',
                 pickle_module=dill
             )
 
-        loss, acc = get_model_loss(model, test_loader, args.device)
+        loss, acc = get_model_loss(evalModel, test_loader, args.device)
 
         logger.info(f'Loss of the model on the test data: {loss}')
         summary_writer.add_scalar("test/loss", loss, step)
         logger.info(f'Accuracy of the model on the test data: {acc}%')
         summary_writer.add_scalar("test/acc", acc, step)
 
-        eval = evaluate_policy(model, env, args.num_eval_episodes, epoch, args.result_folder, args.device)
+        eval = evaluate_policy(evalModel, env, args.num_eval_episodes, epoch, args.result_folder, args.device)
         logger.info(f'Evaluating model on {args.num_eval_episodes} episodes: {eval}')
         summary_writer.add_scalar("test/return", eval, step)
 
