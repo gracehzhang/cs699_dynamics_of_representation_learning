@@ -119,11 +119,11 @@ class AveragedModel(Module):
                                                  self.n_averaged.to(device)))
         self.n_averaged += 1
 
-	def compute_action(self, x):
-		return self.module.compute_action(x)
+    def compute_action(self, x):
+        return self.module.compute_action(x)
 
-	def compute_loss(self, x):
-		return self.module.compute_loss(x)
+    def compute_loss(self, x):
+        return self.module.compute_loss(x)
 
-	def state_dict(self):
-		return self.module.state_dict()	
+    def state_dict(self):
+        return self.module.state_dict()	
