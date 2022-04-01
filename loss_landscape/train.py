@@ -48,6 +48,7 @@ NUM_EPOCHS = 100
 LR = 1e-3
 DATA_FOLDER = "../data/"
 
+
 class RLDataset(torch.utils.data.Dataset):
   'Characterizes a dataset for PyTorch'
   def __init__(self, obs, acs, next_obs, rews, dones):
@@ -295,9 +296,13 @@ if __name__ == "__main__":
         if epoch > swa_start:
             swa_model.update_parameters(model)
             swa_scheduler.step()
-            evalModel = swa_model
-            tp = "swa"
-
+            if args.typeBC == "SWA":
+                evalModel = swa_model
+                tp = "swa"
+            else:
+                scheduler.step()
+                evalModel = model
+                tp = "van"
         else:
             scheduler.step()
             evalModel = model
