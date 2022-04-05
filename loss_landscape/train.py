@@ -294,9 +294,9 @@ if __name__ == "__main__":
 
 
         if epoch > swa_start:
-            swa_model.update_parameters(model)
-            swa_scheduler.step()
             if args.typeBC == "SWA":
+                swa_model.update_parameters(model)
+                swa_scheduler.step()
                 evalModel = swa_model
                 tp = "swa"
             else:
