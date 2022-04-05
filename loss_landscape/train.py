@@ -243,7 +243,7 @@ if __name__ == "__main__":
     swa_model = AveragedModel(model)
     scheduler = CosineAnnealingLR(optimizer, T_max=100)
     swa_start = 75
-    swa_scheduler = SWALR(optimizer, swa_lr=1e-3)
+    swa_scheduler = SWALR(optimizer, swa_lr=5e-4)
 
     # training loop
     # we pass flattened gradients to the FrequentDirectionAccountant before clearing the grad buffer
