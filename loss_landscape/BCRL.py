@@ -35,7 +35,7 @@ import d4rl
 
 
 
-pretrained = False
+pretrained = True
 envName = "halfcheetah-expert-v1"
 backbonePath = "/lab/ssontakk/cs699_dynamics_of_representation_learning/loss_landscape/results_hc_expert/ckpt/99_model.pt"
 
@@ -107,9 +107,10 @@ class CustomBase(BaseFeaturesExtractor):
     def __init__(self, observation_space: gym.spaces.Box, features_dim: int = 256):
         super(CustomBase, self).__init__(observation_space, features_dim)
         self.backboneNet = MLP(gym.make(envName))
-        if pretrained:
-            self.backboneNet.load_state_dict(torch.load(backbonePath))
-        self.backboneNet.layer2 = Identity()
+        # if pretrained:
+        #     print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1")
+        #     self.backboneNet.load_state_dict(torch.load(backbonePath))
+        # self.backboneNet.layer2 = Identity()
     def forward(self, X):
         X = self.backboneNet(X)
         return X
@@ -154,9 +155,9 @@ class Identity(nn.Module):
 #   # return b1
 
 def main(args):
-  for i in range(10):
+  for i in range(1):
     set_random_seed(i)
-    log_dir = f"data/{envName}/Vanilla/{i}/"
+    log_dir = f"data/{envName}/BCBackboneRL/{i}/"
     os.makedirs(log_dir, exist_ok=True)
     # env = SubprocVecEnv([_make_env(rank=i, log_relative_path=log_dir) for i in range(10)])
     # Create and wrap the environment
@@ -173,8 +174,14 @@ def main(args):
     callback = SaveOnBestTrainingRewardCallback(check_freq=1000, log_dir=log_dir)
     # Train the agent
     # time_steps = 100000
+    # 
+    if pretrained:
+      model.policy.features_extractor.backboneNet.load_state_dict(torch.load(backbonePath))
+    model.policy.features_extractor.backboneNet.layer2 = Identity()
+    # print(model.policy.features_extractor.backboneNet)
+    # print(model.get_parameters()['policy']['features_extractor.backboneNet.layer1.weight'])
     model.learn(total_timesteps=args.n_timesteps, callback=callback)
-
+    # print()
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
