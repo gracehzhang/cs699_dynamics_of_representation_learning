@@ -7,7 +7,7 @@ import os
 import glob
 
 # model definition
-class MLP(torch.nn.Module):
+class MLP(nn.Module):
     # define model elements
     def __init__(self, env):
         super(MLP, self).__init__()
