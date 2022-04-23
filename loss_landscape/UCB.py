@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn as nn
 import torch
 import argparse
-from BCModel import MLPEnsemble
+from utils.BCModel import MLPEnsemble
 import d4rl
 import tqdm
 import gym
