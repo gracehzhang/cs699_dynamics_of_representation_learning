@@ -77,7 +77,7 @@ class UCBPolicy(nn.Module):
 def main(args):
     cum_rewards = []
     env = gym.make(args.env)
-    arms = MLPEnsemble(env, args.load_dir)
+    arms = MLPEnsemble(env, os.path.join(args.load_dir, args.env))
     UCB = UCBPolicy(arms, args.epsilon_greedy).to(args.device)
     for episode in args.n_episodes:
         UCB.pick_new_arm(episode)
@@ -103,6 +103,6 @@ if __name__ == "__main__":
     parser.add_argument("--epsilon_greedy", required=False, type=bool, default=False)
     parser.add_argument("--save_dir", required=True, type=str, default=None)
     parser.add_argument("--run_number", required=True, type=int, default=None)
-    parser.add_argument("--device", required=False, type=str, default="0")
+    parser.add_argument("--device", required=False, type=str, default="cuda:0")
     args = parser.parse_args()
     main(args)
