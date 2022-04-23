@@ -119,3 +119,6 @@ class MLPEnsemble(nn.Module):
 
     def forward_one(self, X, i):
         return self.models[i].forward(X)
+
+    def __len__(self):
+        return len(self.models)
