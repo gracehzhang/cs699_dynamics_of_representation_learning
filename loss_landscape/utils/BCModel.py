@@ -82,7 +82,10 @@ class MLPEnsemble(nn.Module):
             model_name = ensemble_save_name + "-model-" + str(i)
             if os.path.isdir(model_name):
                 self.models[i].load_state_dict(
-                    torch.load(os.path.join(model_name, "ckpt", "99_model.pt"))
+                    torch.load(
+                        os.path.join(model_name, "ckpt", "99_model.pt"),
+                        map_location=torch.device("cpu"),
+                    )
                 )
             else:
                 print("Model " + str(i) + " not found")
@@ -119,3 +122,6 @@ class MLPEnsemble(nn.Module):
 
     def forward_one(self, X, i):
         return self.models[i].forward(X)
+
+    def __len__(self):
+        return len(self.models)
