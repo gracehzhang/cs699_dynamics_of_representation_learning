@@ -5,7 +5,7 @@ import torch
 import argparse
 from utils.BCModel import MLPEnsemble
 import d4rl
-import tqdm
+from tqdm import tqdm
 import gym
 import os
 
