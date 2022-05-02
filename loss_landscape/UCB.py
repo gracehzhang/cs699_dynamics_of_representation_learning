@@ -55,11 +55,11 @@ class UCBPolicy(nn.Module):
     def pick_new_arm(self, t):
         if not self.epsilon_greedy:
             if torch.any(self.num_times_picked == 0):
-                self.currently_picked_arm = torch.argmax(self.num_times_picked == 0)
+                self.currently_picked_arm = torch.argmax((self.num_times_picked == 0).cpu())
             else:
                 self.upper_bounds = 2 * torch.log(t) / self.num_times_picked
                 self.currently_picked_arm = torch.argmax(
-                    self.experimental_means + self.upper_bounds
+                    (self.experimental_means + self.upper_bounds).cpu()
                 )
         else:
             if np.random.rand() < 0.1:
