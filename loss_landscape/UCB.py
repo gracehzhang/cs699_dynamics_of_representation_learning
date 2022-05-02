@@ -90,9 +90,9 @@ def main(args):
     save_dir = os.path.join(
         args.save_dir, args.env, f"UCB_eps-{args.epsilon_greedy}_run-{args.run_number}"
     )
-    os.makedirs(os.path.join(save_dir, env), exist_ok=True)
-    torch.save(UCB.state_dict(), os.path.join(save_dir, env, "model.pt"))
-    pickle.dump(cum_rewards, open(os.path.join(save_dir, env, "cum_rewards.pkl"), "wb"))
+    os.makedirs(save_dir, exist_ok=True)
+    torch.save(UCB.state_dict(), os.path.join(save_dir, "model.pt"))
+    pickle.dump(cum_rewards, open(os.path.join(save_dir, "cum_rewards.pkl"), "wb"))
 
 
 if __name__ == "__main__":
