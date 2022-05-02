@@ -55,7 +55,9 @@ class UCBPolicy(nn.Module):
     def pick_new_arm(self, t):
         if not self.epsilon_greedy:
             if torch.any(self.num_times_picked == 0):
-                self.currently_picked_arm = torch.argmax((self.num_times_picked[self.num_times_picked == 0]))
+                self.currently_picked_arm = torch.argmax(
+                    (self.num_times_picked[self.num_times_picked == 0])
+                )
             else:
                 self.upper_bounds = 2 * torch.log(t) / self.num_times_picked
                 self.currently_picked_arm = torch.argmax(
@@ -103,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument("--n_episodes", required=False, type=int, default=4000)
     parser.add_argument("--load_dir", required=True, type=str, default=None)
     parser.add_argument("--env", required=True, type=str, default=None)
-    parser.add_argument("--epsilon_greedy", required=False, type=bool, default=False)
+    parser.add_argument("--epsilon_greedy", required=False, action="store_true")
     parser.add_argument("--save_dir", required=True, type=str, default=None)
     parser.add_argument("--run_number", required=True, type=int, default=None)
     parser.add_argument("--device", required=False, type=str, default="cuda:0")
