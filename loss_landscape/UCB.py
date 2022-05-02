@@ -50,7 +50,7 @@ class UCBPolicy(nn.Module):
         self.epsilon_greedy = epsilon_greedy
 
     def forward(self, observation):
-        return self.arms[self.currently_picked_arm].compute_action(observation)
+        return self.arms.models[self.currently_picked_arm].compute_action(observation)
 
     def pick_new_arm(self, t):
         if not self.epsilon_greedy:
@@ -74,7 +74,7 @@ class UCBPolicy(nn.Module):
         ) / self.num_times_picked[self.currently_picked_arm]
 
     def compute_action(self, observation):
-        return self.arms[self.currently_picked_arm].compute_action(observation)
+        return self.arms.models[self.currently_picked_arm].compute_action(observation)
 
 
 def main(args):
