@@ -1,4 +1,4 @@
-from copyreg import pickle
+import pickle
 import numpy as np
 import torch.nn as nn
 import torch
