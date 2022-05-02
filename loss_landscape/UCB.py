@@ -73,6 +73,9 @@ class UCBPolicy(nn.Module):
             reward - self.experimental_means[self.currently_picked_arm]
         ) / self.num_times_picked[self.currently_picked_arm]
 
+    def compute_action(self, observation):
+        return self.arms[self.currently_picked_arm].compute_action(observation)
+
 
 def main(args):
     cum_rewards = []
