@@ -223,11 +223,11 @@ if __name__ == "__main__":
 
     # we can try computing principal directions from some specific training rounds only
     total_params = count_params(model, skip_bn_bias=args.skip_bn_bias)
-    fd = FrequentDirectionAccountant(k=2, l=10, n=total_params, device=args.device)
+    fd = FrequentDirectionAccountant(k=10, l=10, n=total_params, device=args.device)
     # frequent direction for last 10 epoch
-    fd_last_10 = FrequentDirectionAccountant(k=2, l=10, n=total_params, device=args.device)
+    fd_last_10 = FrequentDirectionAccountant(k=10, l=10, n=total_params, device=args.device)
     # frequent direction for last 1 epoch
-    fd_last_1 = FrequentDirectionAccountant(k=2, l=10, n=total_params, device=args.device)
+    fd_last_1 = FrequentDirectionAccountant(k=10, l=10, n=total_params, device=args.device)
 
     # use the same setup as He et al., 2015 (resnet)
     optimizer = torch.optim.Adam(model.parameters(), lr=LR)

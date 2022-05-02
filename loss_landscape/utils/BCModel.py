@@ -81,7 +81,7 @@ class MLPEnsemble(nn.Module):
         for i in range(1, num_models + 1):
             model_name = ensemble_save_name + "-model-" + str(i)
             if os.path.isdir(model_name):
-                self.models[i].load_state_dict(
+                self.models[i - 1].load_state_dict(
                     torch.load(
                         os.path.join(model_name, "ckpt", "99_model.pt"),
                         map_location=torch.device("cpu"),

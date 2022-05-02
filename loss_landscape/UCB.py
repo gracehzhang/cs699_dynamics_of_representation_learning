@@ -5,7 +5,7 @@ import torch
 import argparse
 from utils.BCModel import MLPEnsemble
 import d4rl
-import tqdm
+from tqdm import tqdm
 import gym
 import os
 
@@ -50,16 +50,16 @@ class UCBPolicy(nn.Module):
         self.epsilon_greedy = epsilon_greedy
 
     def forward(self, observation):
-        return self.arms[self.currently_picked_arm].compute_action(observation)
+        return self.arms.models[self.currently_picked_arm].compute_action(observation)
 
     def pick_new_arm(self, t):
         if not self.epsilon_greedy:
             if torch.any(self.num_times_picked == 0):
-                self.currently_picked_arm = torch.argmax(self.num_times_picked == 0)
+                self.currently_picked_arm = torch.argmax((self.num_times_picked[self.num_times_picked == 0]))
             else:
                 self.upper_bounds = 2 * torch.log(t) / self.num_times_picked
                 self.currently_picked_arm = torch.argmax(
-                    self.experimental_means + self.upper_bounds
+                    (self.experimental_means + self.upper_bounds)
                 )
         else:
             if np.random.rand() < 0.1:
@@ -73,13 +73,16 @@ class UCBPolicy(nn.Module):
             reward - self.experimental_means[self.currently_picked_arm]
         ) / self.num_times_picked[self.currently_picked_arm]
 
+    def compute_action(self, observation):
+        return self.arms.models[self.currently_picked_arm].compute_action(observation)
+
 
 def main(args):
     cum_rewards = []
     env = gym.make(args.env)
     arms = MLPEnsemble(env, os.path.join(args.load_dir, args.env))
     UCB = UCBPolicy(arms, args.epsilon_greedy).to(args.device)
-    for episode in args.n_episodes:
+    for episode in range(args.n_episodes):
         UCB.pick_new_arm(episode)
         reward = simple_evaluate_policy(UCB, env, 1, args.device)
         if episode % 10 == 0:
