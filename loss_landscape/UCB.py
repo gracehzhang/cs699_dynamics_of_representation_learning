@@ -79,7 +79,7 @@ def main(args):
     env = gym.make(args.env)
     arms = MLPEnsemble(env, os.path.join(args.load_dir, args.env))
     UCB = UCBPolicy(arms, args.epsilon_greedy).to(args.device)
-    for episode in args.n_episodes:
+    for episode in range(args.n_episodes):
         UCB.pick_new_arm(episode)
         reward = simple_evaluate_policy(UCB, env, 1, args.device)
         if episode % 10 == 0:
