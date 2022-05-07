@@ -47,6 +47,8 @@ if __name__ == '__main__':
     logger = logging.getLogger()
     if args.debug:
         logger.setLevel(logging.DEBUG)
+    else:
+        logger.setLevel(logging.INFO)
 
     if os.path.exists(f"{args.result_folder}/{args.projection_file}"):
         logger.error(f"{args.projection_file} exists, so we will exit")
@@ -115,3 +117,12 @@ if __name__ == '__main__':
 
     logger.info(f"xrange: {xcoords.min()}, {xcoords.max()}")
     logger.info(f"yrange: {ycoords.min()}, {ycoords.max()}")
+
+    logger.info(f"xstats: {torch.mean(xcoords)}, {torch.std(xcoords)}")
+    logger.info(f"ystats: {torch.mean(ycoords)}, {torch.std(ycoords)}")
+
+    for n in [10,20,30,40,50,60,70,80]:
+        if n < len(state_files) - 1:
+            logger.info(f"xstats (last {n}): {torch.mean(xcoords[-n:])}, {torch.std(xcoords[-n:])}")
+            logger.info(f"ystats (last {n}): {torch.mean(ycoords[-n:])}, {torch.std(ycoords[-n:])}")
+

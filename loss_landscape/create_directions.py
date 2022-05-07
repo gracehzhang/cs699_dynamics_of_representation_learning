@@ -82,7 +82,7 @@ if __name__ == '__main__':
             model = Q_Learning(env)
 
         model.to(args.device)
-        total_params = count_params(model)
+        total_params = count_params(model, skip_bn_bias=args.skip_bn_bias)
         logger.info(f"using {args.model} with {total_params} parameters")
 
         # we need to load actual weights to get the magnitudes for normalization
@@ -91,8 +91,8 @@ if __name__ == '__main__':
         model.load_state_dict(state_dict)
 
         # create "filter" normalized random direction if nothing is passed
-        direction1 = create_normalized_random_direction(model, skip_bn_bias=True)
-        direction2 = create_normalized_random_direction(model, skip_bn_bias=True)
+        direction1 = create_normalized_random_direction(model, skip_bn_bias=args.skip_bn_bias)
+        direction2 = create_normalized_random_direction(model, skip_bn_bias=args.skip_bn_bias)
 
 
         def flatten_direction(direction):
